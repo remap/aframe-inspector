@@ -4608,6 +4608,9 @@ styleSheet.flush()
                   // @todo Show the error on the UI
                 });
               }
+
+              //jb set component name to null
+              // so that it can be differentiated from a poorly named system
             },
             {
               key: 'renderCommonAttributes',
@@ -6414,8 +6417,31 @@ styleSheet.flush()
               }
             },
             {
+              key: 'propertyNotify',
+              value: function propertyNotify() {
+                // borrowed from widget above
+                var value =
+                  this.props.schema.type === 'selector'
+                    ? this.props.entity.getDOMAttribute(
+                        this.props.componentname
+                      )[this.props.name]
+                    : this.props.data;
+                window.dispatchEvent(
+                  new CustomEvent('inspectorPropertyUpdate', {
+                    detail: {
+                      id: this.props.entity.id,
+                      component: this.props.componentname,
+                      property: this.props.name,
+                      value: value
+                    }
+                  })
+                );
+              }
+            },
+            {
               key: 'render',
               value: function render() {
+                var _this2 = this;
                 var props = this.props;
                 var value =
                   props.schema.type === 'selector'
@@ -6449,7 +6475,18 @@ styleSheet.flush()
                         htmlFor: this.id,
                         className: 'text',
                         title: title,
-                        children: props.name
+                        children: /*#__PURE__*/ (0,
+                        react_jsx_runtime__WEBPACK_IMPORTED_MODULE_14__.jsx)(
+                          'a',
+                          {
+                            onClick: function onClick(event) {
+                              _this2.propertyNotify();
+                              event.preventDefault();
+                              event.stopPropagation();
+                            },
+                            children: props.name
+                          }
+                        )
                       }
                     ),
                     this.getWidget(props.schema.type)
@@ -9271,6 +9308,9 @@ styleSheet.flush()
               _assertThisInitialized(_this),
               'rebuildEntityOptions',
               function () {
+                console.log(
+                  'AFRAME Inspector received event rebuildEntityOptions'
+                );
                 var entities = [
                   {
                     depth: 0,
@@ -9533,6 +9573,14 @@ styleSheet.flush()
                 ),
                 500
               );
+            // JB
+            console.log('Adding rebuildInspectorSceneGraph');
+            window.addEventListener(
+              'rebuildInspectorSceneGraph',
+              function (event) {
+                _this.rebuildEntityOptions();
+              }
+            );
             return _this;
           }
           _createClass(SceneGraph, [
@@ -9946,7 +9994,7 @@ styleSheet.flush()
                 xhr.open('POST', 'http://localhost:51234/save');
                 xhr.onerror = function () {
                   alert(
-                    'aframe-watcher not running. This feature requires a companion service running locally. npm install aframe-watcher to save changes back to file. Read more at supermedium.com/aframe-watcher'
+                    'aframe-watcher not running. This feature requires a companion service running locally. npm install aframe-watcher to save changes back to file. Read more at https://github.com/supermedium/aframe-watcher'
                   );
                 };
                 xhr.setRequestHeader('Content-Type', 'application/json');
@@ -10077,6 +10125,16 @@ styleSheet.flush()
                         className: watcherClassNames,
                         title: watcherTitle,
                         onClick: this.writeChanges
+                      }),
+                      /*#__PURE__*/ (0,
+                      react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)('a', {
+                        title: 'Copy entity HTML to clipboard',
+                        'data-action': 'copy-entity-to-clipboard',
+                        className: 'button fa fa-clipboard',
+                        style: {
+                          float: 'right',
+                          marginRight: '5px'
+                        }
                       })
                     ]
                   })
@@ -12174,7 +12232,10 @@ styleSheet.flush()
               value: function componentDidUpdate(prevProps) {
                 // This will be triggered typically when the element is changed directly with
                 // element.setAttribute.
-                if (this.props.value !== prevProps.value) {
+
+                // We use Object.is instead of === for comparison here so that comparing two NaN doesn't trigger an infinite update.
+                // Object.is(NaN, NaN) is true, NaN === NaN is false
+                if (!Object.is(this.props.value, prevProps.value)) {
                   this.setState({
                     value: this.props.value,
                     displayValue: this.props.value.toFixed(this.props.precision)
@@ -12882,7 +12943,10 @@ styleSheet.flush()
                 function getTextureFromSrc(src) {
                   for (var hash in AFRAME.INSPECTOR.sceneEl.systems.material
                     .textureCache) {
-                    if (JSON.parse(hash).src === src) {
+                    // The key in textureCache is not always a json.
+                    // For example <a-videosphere src="#video"> gives a "video" key in textureCache.
+                    // So we check for '{' before using JSON.parse here.
+                    if (hash[0] === '{' && JSON.parse(hash).src === src) {
                       return AFRAME.INSPECTOR.sceneEl.systems.material
                         .textureCache[hash];
                     }
@@ -12892,7 +12956,9 @@ styleSheet.flush()
                 var url;
                 var isAssetHash = value[0] === '#';
                 var isAssetImg = value instanceof HTMLImageElement;
-                if (isAssetImg) {
+                var isAssetVideo = value instanceof HTMLVideoElement;
+                var isAssetImgOrVideo = isAssetImg || isAssetVideo;
+                if (isAssetImgOrVideo) {
                   url = value.src;
                 } else if (isAssetHash) {
                   url = getUrlFromId(value);
@@ -12901,10 +12967,10 @@ styleSheet.flush()
                 }
                 var texture = getTextureFromSrc(value);
                 var valueType = null;
-                valueType = isAssetImg || isAssetHash ? 'asset' : 'url';
-                if (texture) {
+                valueType = isAssetImgOrVideo || isAssetHash ? 'asset' : 'url';
+                if (!isAssetVideo && texture) {
                   texture.then(paintPreview);
-                } else if (url) {
+                } else if (!isAssetVideo && url) {
                   // The image still didn't load
                   var image = new Image();
                   image.addEventListener(
@@ -12919,7 +12985,7 @@ styleSheet.flush()
                   context.clearRect(0, 0, canvas.width, canvas.height);
                 }
                 this.setState({
-                  value: isAssetImg ? '#' + value.id : value,
+                  value: isAssetImgOrVideo ? '#' + value.id : value,
                   valueType: valueType,
                   url: url
                 });
@@ -13016,19 +13082,21 @@ styleSheet.flush()
           /*#__PURE__*/ __webpack_require__.n(
             react__WEBPACK_IMPORTED_MODULE_0__
           );
-        /* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_3__ =
+        /* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_4__ =
           __webpack_require__(
             /*! prop-types */ './node_modules/prop-types/index.js'
           );
-        /* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_3___default =
+        /* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_4___default =
           /*#__PURE__*/ __webpack_require__.n(
-            prop_types__WEBPACK_IMPORTED_MODULE_3__
+            prop_types__WEBPACK_IMPORTED_MODULE_4__
           );
         /* harmony import */ var _NumberWidget__WEBPACK_IMPORTED_MODULE_1__ =
           __webpack_require__(
             /*! ./NumberWidget */ './src/components/widgets/NumberWidget.js'
           );
-        /* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__ =
+        /* harmony import */ var _lib_utils__WEBPACK_IMPORTED_MODULE_2__ =
+          __webpack_require__(/*! ../../lib/utils */ './src/lib/utils.js');
+        /* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__ =
           __webpack_require__(
             /*! react/jsx-runtime */ './node_modules/react/jsx-runtime.js'
           );
@@ -13256,8 +13324,10 @@ styleSheet.flush()
               value: function componentDidUpdate() {
                 var props = this.props;
                 if (
-                  props.value.x !== this.state.x ||
-                  props.value.y !== this.state.y
+                  !(0, _lib_utils__WEBPACK_IMPORTED_MODULE_2__.areVectorsEqual)(
+                    props.value,
+                    this.state
+                  )
                 ) {
                   this.setState({
                     x: props.value.x,
@@ -13275,11 +13345,11 @@ styleSheet.flush()
                   onChange: this.onChange
                 };
                 return /*#__PURE__*/ (0,
-                react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)('div', {
+                react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)('div', {
                   className: 'vec2',
                   children: [
                     /*#__PURE__*/ (0,
-                    react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(
+                    react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(
                       _NumberWidget__WEBPACK_IMPORTED_MODULE_1__['default'],
                       _objectSpread(
                         {
@@ -13290,7 +13360,7 @@ styleSheet.flush()
                       )
                     ),
                     /*#__PURE__*/ (0,
-                    react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(
+                    react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(
                       _NumberWidget__WEBPACK_IMPORTED_MODULE_1__['default'],
                       _objectSpread(
                         {
@@ -13309,11 +13379,11 @@ styleSheet.flush()
         })(react__WEBPACK_IMPORTED_MODULE_0___default().Component);
         _defineProperty(Vec2Widget, 'propTypes', {
           componentname:
-            prop_types__WEBPACK_IMPORTED_MODULE_3___default().string,
-          entity: prop_types__WEBPACK_IMPORTED_MODULE_3___default().object,
-          onChange: prop_types__WEBPACK_IMPORTED_MODULE_3___default().func,
+            prop_types__WEBPACK_IMPORTED_MODULE_4___default().string,
+          entity: prop_types__WEBPACK_IMPORTED_MODULE_4___default().object,
+          onChange: prop_types__WEBPACK_IMPORTED_MODULE_4___default().func,
           value:
-            prop_types__WEBPACK_IMPORTED_MODULE_3___default().object.isRequired
+            prop_types__WEBPACK_IMPORTED_MODULE_4___default().object.isRequired
         });
 
         /***/
@@ -13340,19 +13410,21 @@ styleSheet.flush()
           /*#__PURE__*/ __webpack_require__.n(
             react__WEBPACK_IMPORTED_MODULE_0__
           );
-        /* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_3__ =
+        /* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_4__ =
           __webpack_require__(
             /*! prop-types */ './node_modules/prop-types/index.js'
           );
-        /* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_3___default =
+        /* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_4___default =
           /*#__PURE__*/ __webpack_require__.n(
-            prop_types__WEBPACK_IMPORTED_MODULE_3__
+            prop_types__WEBPACK_IMPORTED_MODULE_4__
           );
         /* harmony import */ var _NumberWidget__WEBPACK_IMPORTED_MODULE_1__ =
           __webpack_require__(
             /*! ./NumberWidget */ './src/components/widgets/NumberWidget.js'
           );
-        /* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__ =
+        /* harmony import */ var _lib_utils__WEBPACK_IMPORTED_MODULE_2__ =
+          __webpack_require__(/*! ../../lib/utils */ './src/lib/utils.js');
+        /* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__ =
           __webpack_require__(
             /*! react/jsx-runtime */ './node_modules/react/jsx-runtime.js'
           );
@@ -13581,9 +13653,10 @@ styleSheet.flush()
               value: function componentDidUpdate() {
                 var props = this.props;
                 if (
-                  props.value.x !== this.state.x ||
-                  props.value.y !== this.state.y ||
-                  props.value.z !== this.state.z
+                  !(0, _lib_utils__WEBPACK_IMPORTED_MODULE_2__.areVectorsEqual)(
+                    props.value,
+                    this.state
+                  )
                 ) {
                   this.setState({
                     x: props.value.x,
@@ -13602,11 +13675,11 @@ styleSheet.flush()
                   onChange: this.onChange
                 };
                 return /*#__PURE__*/ (0,
-                react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)('div', {
+                react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)('div', {
                   className: 'vec3',
                   children: [
                     /*#__PURE__*/ (0,
-                    react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(
+                    react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(
                       _NumberWidget__WEBPACK_IMPORTED_MODULE_1__['default'],
                       _objectSpread(
                         {
@@ -13617,7 +13690,7 @@ styleSheet.flush()
                       )
                     ),
                     /*#__PURE__*/ (0,
-                    react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(
+                    react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(
                       _NumberWidget__WEBPACK_IMPORTED_MODULE_1__['default'],
                       _objectSpread(
                         {
@@ -13628,7 +13701,7 @@ styleSheet.flush()
                       )
                     ),
                     /*#__PURE__*/ (0,
-                    react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(
+                    react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(
                       _NumberWidget__WEBPACK_IMPORTED_MODULE_1__['default'],
                       _objectSpread(
                         {
@@ -13647,11 +13720,11 @@ styleSheet.flush()
         })(react__WEBPACK_IMPORTED_MODULE_0___default().Component);
         _defineProperty(Vec3Widget, 'propTypes', {
           componentname:
-            prop_types__WEBPACK_IMPORTED_MODULE_3___default().string,
-          entity: prop_types__WEBPACK_IMPORTED_MODULE_3___default().object,
-          onChange: prop_types__WEBPACK_IMPORTED_MODULE_3___default().func,
+            prop_types__WEBPACK_IMPORTED_MODULE_4___default().string,
+          entity: prop_types__WEBPACK_IMPORTED_MODULE_4___default().object,
+          onChange: prop_types__WEBPACK_IMPORTED_MODULE_4___default().func,
           value:
-            prop_types__WEBPACK_IMPORTED_MODULE_3___default().object.isRequired
+            prop_types__WEBPACK_IMPORTED_MODULE_4___default().object.isRequired
         });
 
         /***/
@@ -13678,19 +13751,21 @@ styleSheet.flush()
           /*#__PURE__*/ __webpack_require__.n(
             react__WEBPACK_IMPORTED_MODULE_0__
           );
-        /* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_3__ =
+        /* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_4__ =
           __webpack_require__(
             /*! prop-types */ './node_modules/prop-types/index.js'
           );
-        /* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_3___default =
+        /* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_4___default =
           /*#__PURE__*/ __webpack_require__.n(
-            prop_types__WEBPACK_IMPORTED_MODULE_3__
+            prop_types__WEBPACK_IMPORTED_MODULE_4__
           );
         /* harmony import */ var _NumberWidget__WEBPACK_IMPORTED_MODULE_1__ =
           __webpack_require__(
             /*! ./NumberWidget */ './src/components/widgets/NumberWidget.js'
           );
-        /* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__ =
+        /* harmony import */ var _lib_utils__WEBPACK_IMPORTED_MODULE_2__ =
+          __webpack_require__(/*! ../../lib/utils */ './src/lib/utils.js');
+        /* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__ =
           __webpack_require__(
             /*! react/jsx-runtime */ './node_modules/react/jsx-runtime.js'
           );
@@ -13920,10 +13995,10 @@ styleSheet.flush()
               value: function componentDidUpdate() {
                 var props = this.props;
                 if (
-                  props.value.x !== this.state.x ||
-                  props.value.y !== this.state.y ||
-                  props.value.z !== this.state.z ||
-                  props.value.w !== this.state.w
+                  !(0, _lib_utils__WEBPACK_IMPORTED_MODULE_2__.areVectorsEqual)(
+                    props.value,
+                    this.state
+                  )
                 ) {
                   this.setState({
                     x: props.value.x,
@@ -13943,11 +14018,11 @@ styleSheet.flush()
                   onChange: this.onChange
                 };
                 return /*#__PURE__*/ (0,
-                react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)('div', {
+                react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsxs)('div', {
                   className: 'vec4',
                   children: [
                     /*#__PURE__*/ (0,
-                    react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(
+                    react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(
                       _NumberWidget__WEBPACK_IMPORTED_MODULE_1__['default'],
                       _objectSpread(
                         {
@@ -13958,7 +14033,7 @@ styleSheet.flush()
                       )
                     ),
                     /*#__PURE__*/ (0,
-                    react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(
+                    react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(
                       _NumberWidget__WEBPACK_IMPORTED_MODULE_1__['default'],
                       _objectSpread(
                         {
@@ -13969,7 +14044,7 @@ styleSheet.flush()
                       )
                     ),
                     /*#__PURE__*/ (0,
-                    react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(
+                    react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(
                       _NumberWidget__WEBPACK_IMPORTED_MODULE_1__['default'],
                       _objectSpread(
                         {
@@ -13980,7 +14055,7 @@ styleSheet.flush()
                       )
                     ),
                     /*#__PURE__*/ (0,
-                    react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(
+                    react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(
                       _NumberWidget__WEBPACK_IMPORTED_MODULE_1__['default'],
                       _objectSpread(
                         {
@@ -13999,11 +14074,11 @@ styleSheet.flush()
         })(react__WEBPACK_IMPORTED_MODULE_0___default().Component);
         _defineProperty(Vec4Widget, 'propTypes', {
           componentname:
-            prop_types__WEBPACK_IMPORTED_MODULE_3___default().string,
-          entity: prop_types__WEBPACK_IMPORTED_MODULE_3___default().object,
-          onChange: prop_types__WEBPACK_IMPORTED_MODULE_3___default().func,
+            prop_types__WEBPACK_IMPORTED_MODULE_4___default().string,
+          entity: prop_types__WEBPACK_IMPORTED_MODULE_4___default().object,
+          onChange: prop_types__WEBPACK_IMPORTED_MODULE_4___default().func,
           value:
-            prop_types__WEBPACK_IMPORTED_MODULE_3___default().object.isRequired
+            prop_types__WEBPACK_IMPORTED_MODULE_4___default().object.isRequired
         });
 
         /***/
@@ -17291,9 +17366,18 @@ styleSheet.flush()
             el: mouseCursor,
             enable: function enable() {
               mouseCursor.setAttribute('raycaster', 'enabled', true);
+              inspector.container.addEventListener('mousedown', onMouseDown);
+              inspector.container.addEventListener('mouseup', onMouseUp);
+              inspector.container.addEventListener('dblclick', onDoubleClick);
             },
             disable: function disable() {
               mouseCursor.setAttribute('raycaster', 'enabled', false);
+              inspector.container.removeEventListener('mousedown', onMouseDown);
+              inspector.container.removeEventListener('mouseup', onMouseUp);
+              inspector.container.removeEventListener(
+                'dblclick',
+                onDoubleClick
+              );
             }
           };
         }
@@ -17619,6 +17703,8 @@ styleSheet.flush()
         'use strict';
         __webpack_require__.r(__webpack_exports__);
         /* harmony export */ __webpack_require__.d(__webpack_exports__, {
+          /* harmony export */ areVectorsEqual: () =>
+            /* binding */ areVectorsEqual,
           /* harmony export */ equal: () => /* binding */ equal,
           /* harmony export */ getMajorVersion: () =>
             /* binding */ getMajorVersion,
@@ -17745,6 +17831,18 @@ styleSheet.flush()
           link.download = filename || 'ascene.html';
           link.click();
           // URL.revokeObjectURL(url); breaks Firefox...
+        }
+
+        // Compares 2 vector objects up to size 4
+        // Expect v1 and v2 to take format {x: number, y: number, z: number, w:number}
+        // Smaller vectors (ie. vec2) should work as well since their z & w vals will be the same (undefined)
+        function areVectorsEqual(v1, v2) {
+          return (
+            Object.is(v1.x, v2.x) &&
+            Object.is(v1.y, v2.y) &&
+            Object.is(v1.z, v2.z) &&
+            Object.is(v1.w, v2.w)
+          );
         }
 
         /***/
@@ -80469,11 +80567,13 @@ object-assign
         if (entity === this.sceneEl) {
           return;
         }
-        entity.object3D.traverse(function (node) {
-          if (_this5.helpers[node.uuid]) {
-            _this5.helpers[node.uuid].visible = true;
-          }
-        });
+        if (entity) {
+          entity.object3D.traverse(function (node) {
+            if (_this5.helpers[node.uuid]) {
+              _this5.helpers[node.uuid].visible = true;
+            }
+          });
+        }
       },
       initEvents: function initEvents() {
         var _this6 = this;

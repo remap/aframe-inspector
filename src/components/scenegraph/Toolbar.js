@@ -133,6 +133,12 @@ export default class Toolbar extends React.Component {
             title={watcherTitle}
             onClick={this.writeChanges}
           />
+          <a
+            title="Copy entity HTML to clipboard"
+            data-action="copy-entity-to-clipboard"
+            className="button fa fa-clipboard"
+            style={{ float: 'right', marginRight: '5px' }}
+          />
         </div>
       </div>
     );

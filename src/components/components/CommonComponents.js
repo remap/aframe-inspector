@@ -53,6 +53,8 @@ export default class CommonComponents extends React.Component {
     });
   }
 
+  //jb set component name to null
+  // so that it can be differentiated from a poorly named system
   renderCommonAttributes() {
     const entity = this.props.entity;
     return ['position', 'rotation', 'scale', 'visible'].map((componentName) => {

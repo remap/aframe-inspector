@@ -1,0 +1,218 @@
+.Select-control {
+  background-color: #222 !important;
+  border: none;
+  border-radius: 0;
+  color: #1faaf2;
+  font-family: $monosapce;
+}
+.Select-menu-outer {
+  border: none;
+}
+.Select-menu-outer .is-focused {
+  background-color: #1faaf2 !important;
+  color: #c3c3c3;
+}
+.Select-option {
+  background-color: #222 !important;
+}
+.select-widget {
+  display: inline-block;
+  width: 157px;
+}
+.Select-placeholder,
+.Select--single > .Select-control .Select-value {
+  color: #1faaf2 !important;
+}
+.Select-value-label {
+  color: #1faaf2 !important;
+}
+/* Dropdown menu */
+.dropbtn {
+  border: none;
+  color: #c3c3c3;
+  cursor: pointer;
+}
+.dropdown {
+  display: inline-block;
+  position: relative;
+}
+.dropdown-content {
+  background-color: #f9f9f9;
+  box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+  display: none;
+  left: 8px;
+  min-width: 38px;
+  position: absolute;
+  z-index: 999;
+}
+.dropdown-content a {
+  background-color: #232323;
+  color: #7d7d7d;
+  display: block;
+  padding: 10px 14px;
+  text-decoration: none;
+}
+.dropdown-content a:hover {
+  background-color: #4ecbff;
+  color: #c3c3c3;
+}
+.dropdownhover .dropdown-content {
+  display: block;
+}
+.dropdownhover .dropbtn {
+  color: #1faaf2;
+}
+ing: 16px;
+}
+.gallery li {
+  border-radius: 2px;
+  box-shadow: 0 0 6px rgba(0,0,0,0.6);
+  cursor: pointer;
+  margin: 8px;
+  overflow: hidden;
+  width: 155px;
+}
+.gallery li.selected,
+.gallery li:hover {
+  box-shadow: 0 0 0 2px #1eaaf1;
+}
+.gallery li .detail {
+  background-color: #323232;
+  margin: 0;
+  min-height: 60px;
+  padding: 3px 10px;
+}
+.gallery li .button.fa-external-link {
+  margin-left: 136px;
+  margin-top: 5px;
+  position: fixed;
+}
+.preview {
+  padding: 10px;
+  width: 150px;
+}
+.preview input {
+  display: block;
+  margin: 8px 0;
+  width: 144px;
+}
+.preview button {
+  width: 155px;
+}
+.preview .detail .title {
+  color: #fff;
+  display: inline-block;
+  max-width: 155px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gallery li.selected .detail,
+.gallery li:hover .detail {
+  background-color: #444;
+}
+.gallery li .detail span {
+  color: #777;
+  display: block;
+  margin-top: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 140px;
+}
+.gallery li.selected .detail span,
+.gallery li:hover .detail span {
+  color: #888;
+}
+.gallery li .detail span.title {
+  color: #fff !important;
+}
+.modal button {
+  appearance: none;
+  border-radius: 0;
+  box-shadow: none;
+  cursor: pointer;
+  display: inline-block;
+  font-size: 12px;
+  line-height: 1.8;
+  margin: 0 10px 0 0;
+  padding: 5px 10px;
+}
+.modal buttonfocus {
+  outline: none;
+}
+.modal button {
+  background-color: #1eaaf1;
+  border: none;
+  color: #fff;
+}
+.modal buttonhover,
+.modal button.hover {
+  background-color: #346392;
+  text-shadow: -1px 1px #27496d;
+}
+.modal buttonactive,
+.modal button.active {
+  background-color: #27496d;
+  text-shadow: -1px 1px #193047;
+}
+.modal buttondisabled {
+  background-color: #888;
+  cursor: none;
+}
+.newimage {
+  background-color: #323232;
+  color: #bcbcbc;
+  display: flex;
+  font-size: 13px;
+  justify-content: space-between;
+  margin-top: 10px;
+  overflow: auto;
+  padding: 10px;
+}
+.newimage input {
+  color: #1eaaf1;
+  padding: 3px 5px;
+}
+.texture canvas + input {
+  margin-left: 5px;
+}
+.texture .fa {
+  padding-right: 5px;
+}
+.texture .fa-external-link {
+  font-size: 14px;
+  padding-top: 2px;
+}
+.uploader-normal-button .hidden {
+  display: none;
+}
+.gallery a.fa.texture-link {
+  box-shadow: 0 0 14px -1px rgba(0,0,0,0.75);
+  position: fixed;
+}
+.assets.search {
+  margin-top: 10px;
+  width: 200px;
+}
+.assets.search .fa-search {
+  top: 7px;
+}
+.new_asset_options {
+  margin: 10px;
+}
+.new_asset_options > ul {
+  margin-left: 10px;
+  padding: 5px;
+}
+.new_asset_options > ul > li {
+  padding: 10px 0;
+}
+.new_asset_options .imageUrl {
+  margin-left: 5px;
+  width: 350px;
+}
+.texture canvas {
+  border: 1px solid $bglight;
+  cursor: pointer;
+}

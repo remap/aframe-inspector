@@ -40,6 +40,11 @@ export default class SceneGraph extends React.Component {
       this.updateFilteredEntities.bind(this),
       500
     );
+    // JB
+    console.log('Adding rebuildInspectorSceneGraph');
+    window.addEventListener('rebuildInspectorSceneGraph', (event) => {
+      this.rebuildEntityOptions();
+    });
   }
 
   componentDidMount() {
@@ -80,6 +85,7 @@ export default class SceneGraph extends React.Component {
   };
 
   rebuildEntityOptions = () => {
+    console.log('AFRAME Inspector received event rebuildEntityOptions');
     const entities = [{ depth: 0, entity: this.props.scene }];
 
     function treeIterate(element, depth) {

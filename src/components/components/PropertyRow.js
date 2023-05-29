@@ -125,6 +125,26 @@ export default class PropertyRow extends React.Component {
     }
   }
 
+  propertyNotify() {
+    // borrowed from widget above
+    const value =
+      this.props.schema.type === 'selector'
+        ? this.props.entity.getDOMAttribute(this.props.componentname)[
+            this.props.name
+          ]
+        : this.props.data;
+    window.dispatchEvent(
+      new CustomEvent('inspectorPropertyUpdate', {
+        detail: {
+          id: this.props.entity.id,
+          component: this.props.componentname,
+          property: this.props.name,
+          value: value
+        }
+      })
+    );
+  }
+
   render() {
     const props = this.props;
     const value =
@@ -145,7 +165,15 @@ export default class PropertyRow extends React.Component {
     return (
       <div className={className}>
         <label htmlFor={this.id} className="text" title={title}>
-          {props.name}
+          <a
+            onClick={(event) => {
+              this.propertyNotify();
+              event.preventDefault();
+              event.stopPropagation();
+            }}
+          >
+            {props.name}
+          </a>
         </label>
         {this.getWidget(props.schema.type)}
       </div>
