@@ -44,6 +44,7 @@ export default class SceneGraph extends React.Component {
     console.log('Adding rebuildInspectorSceneGraph');
     window.addEventListener('rebuildInspectorSceneGraph', (event) => {
       this.rebuildEntityOptions();
+      Events.emit('refreshsidebarobject3d');
     });
   }
 

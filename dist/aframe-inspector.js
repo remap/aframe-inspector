@@ -9579,6 +9579,9 @@ styleSheet.flush()
               'rebuildInspectorSceneGraph',
               function (event) {
                 _this.rebuildEntityOptions();
+                _lib_Events__WEBPACK_IMPORTED_MODULE_4__['default'].emit(
+                  'refreshsidebarobject3d'
+                );
               }
             );
             return _this;
