@@ -39,7 +39,7 @@ For further details, see [changes.md](./changes.md).
 
 To immediately use our modification of the A-Frame Inspector on your 8th Wall project, add the following to your `<a-scene>` in `body.html`:
 
-` inspector="url: https://ryandc-yeo.github.io/aframe-inspector/dist/inspector.js"`
+`inspector="url: https://remap.github.io/aframe-inspector/dist/aframe-inspector.js"`
 
 ## Making Your Own Modifications
 
