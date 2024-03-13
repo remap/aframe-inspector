@@ -1,51 +1,55 @@
-# A-Frame Inspector
+# A-Frame Custom Patch for 8th Wall Integration
 
-A visual inspector tool for [A-Frame](https://aframe.io) scenes. Just hit
-`<ctrl> + <alt> + i` on any A-Frame scene to open up the Inspector.
+**Authors:** Jeff Burke, Aidan Strong, Ryan Yeo
 
-- [Documentation / Guide](https://aframe.io/docs/master/introduction/visual-inspector-and-dev-tools.html)
-- [Example](https://aframe.io/aframe-inspector/examples/)
+**Date:** 3/1/2024
 
-Also check out:
+## Purpose
 
-- [A-Frame Watcher](https://github.com/supermedium/aframe-watcher) - Companion server to sync changes to HTML files.
+For the USITT 24 WebAR Demo, we leverage both 8Frame and the A-Frame Inspector, making changes accordingly to fit the needs of this project.
 
-![Inspector Preview](https://user-images.githubusercontent.com/674727/50159991-fa540c80-028c-11e9-87f1-72c54e08d808.png)
+This patch of the A-Frame inspector supports development on our [USITT 23 WebAR Demo](https://www.8thwall.com/decentar/usitt-template/project), enabling developers to create augmented reality (AR) experiences using A-Frame within the 8th Wall platform.
 
-## Using the Inspector
+### 8Frame
 
-### Keyboard Shortcut
+8Frame is 8th Wall's modified version of AFrame, with the following changes to improve compatibility with their platform:
+
+- 8Frame exposes properties in THREE.js's `WebGLRenderer` so that it's compatible with MRCS HoloVideoObject.
+- 8Frame improves AFrame's compatibility with XR8.
+
+### A-Frame Inspector
 
 A-Frame comes with a **keyboard shortcut** to inject the inspector. Just open
 up any A-Frame scene (running at least A-Frame v0.3.0) and press **`<ctrl> +
 <alt> + i`** to inject the inspector, just like you would use a DOM inspector:
 
-### Specifying Inspector Build
+- [Documentation / Guide](https://aframe.io/docs/master/introduction/visual-inspector-and-dev-tools.html)
+- [Example](https://aframe.io/aframe-inspector/examples/)
 
-This is done with the `inspector` component. By default, this is set on the
-scene already. If we want, we can specify a specific build of the Inspector to
-inject by passing a URL. For debugging:
+## What's Different
 
-```html
-<a-scene inspector="url: http://localhost:3333/dist/aframe-inspector.js">
-  <!-- Scene... -->
-</a-scene>
-```
+The patch modifies certain aspects of A-Frame while ensuring compatibility with 8th Wall's AR platform, which is helpful for the AR development workflow on 8th Wall. A summary of the modifications:
 
-To use the master branch of the Inspector:
+- useful property updates via console in response to user interactions
+- toolbar addition that provides a convenient way for users to copy entity HTML to the clipboard
 
-```html
-<a-scene inspector="url: https://cdn.jsdelivr.net/gh/aframevr/aframe-inspector@master/dist/aframe-inspector.min.js">
-</a-scene>
-```
+For further details, see [changes.md](./changes.md).
 
-## Local Development
+## How to use our Inspector
 
-```bash
-git clone git@github.com:aframevr/aframe-inspector.git
-cd aframe-inspector
-npm install
-npm start
-```
+To immediately use our modification of the A-Frame Inspector on your 8th Wall project, add the following to your `<a-scene>` in `body.html`:
 
-Then navigate to __[http://localhost:3333/examples/](http://localhost:3333/examples/)__
+` inspector="url: https://ryandc-yeo.github.io/aframe-inspector/dist/inspector.js"`
+
+## Making Your Own Modifications
+
+If you wish to make your own changes to our A-Frame Inspector, follow these steps:
+
+1. Visit the [REMAP A-Frame Inspector GitHub repository](https://github.com/remap/aframe-inspector).
+2. **Fork** the respository then download it to your local machine.
+3. Navigate to the `/dist` directory containing the A-Frame Inspector source code in `inspector.js`.
+4. Test if your local copy of the inspector works by running it (_npm start_), then in your 8th Wall repository, add the following to your `<a-scene>` in `body.html`:
+   `inspector="url: http://localhost:3333/dist/inspector.js"`
+5. Preview your project in a new window and open the A-Frame inspector with `<ctrl> + <alt> + i`. On the left panel, choose `<a-scene_scene>` and a panel on the right should show up. Click on INSPECTOR and make sure the url of the inspector matches the source (http://localhost:3333/dist/inspector.js).
+6. Now you can make your modifications, **make sure the changes are compatible with A-Frame and 8th Wall**.
+7. Once you are happy with the changes, publish your repository on Github Pages, then replace the link in your 8th Wall project accordingly.
